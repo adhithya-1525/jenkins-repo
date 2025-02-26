@@ -2,32 +2,39 @@ pipeline {
     agent any
 
     stages {
-        stage('Checkout Code') {
+        stage('Define Variables') {
             steps {
-                echo "Checking out code from branch: ${env.BRANCH_NAME}"
-                git url: 'https://github.com/adhithya-1525/jenkins-repo.git', branch: "${env.BRANCH_NAME}"
+                script {
+                    // Define variables
+                    def a = 5
+                    def b = 10
+                    // Store them for use in next steps
+                    env.A = a
+                    env.B = b
+                }
             }
         }
 
-        stage('Build') {
+        stage('Compare Values') {
             steps {
-                echo "Building the application..."
+                script {
+                    // Compare the values of a and b and determine the greater one
+                    if (env.A.toInteger() > env.B.toInteger()) {
+                        env.RESULT = env.A
+                    } else {
+                        env.RESULT = env.B
+                    }
+                }
             }
         }
 
-        stage('Test') {
+        stage('Print Result') {
             steps {
-                echo "Running tests..."
-            }
-        }
-
-        stage('Deploy') {
-            // when { branch 'main' }  // Only deploy if it's the 'main' branch
-            steps {
-                echo "Deploying the application..."
-                // Add deployment steps (e.g., copy files, run Docker, deploy to server)
+                script {
+                    // Print the result
+                    echo "The greater value is: ${env.RESULT}"
+                }
             }
         }
     }
 }
-
