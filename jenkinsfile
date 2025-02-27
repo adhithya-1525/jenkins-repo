@@ -1,16 +1,29 @@
 pipeline {
-    agent any  // Correct placement
+    agent any
     stages {
-        stage('Stage One') {  // Added stage name
-            steps {  // Corrected from "step" to "steps"
-                echo "Hi, this is a demo Jenkinsfile"
-            }  
+        stage('Build') {
+            steps {
+                echo "Building the project..."
+                // Simulating build success
+            }
         }
-        stage('Stage Two') {  // Added stage name
-            steps {  
-                echo "Stage two"
-            }  
-        }      
-    }     
-}
+    }
+    post {
+        success {
+            sendGoogleChatNotification(" Build Successful!")
+        }
+        failure {
+            sendGoogleChatNotification(" Build Failed!")
+        }
+    }
+}    
+// Function to send notifications to Google Chat
+def sendGoogleChatNotification(String message) {
+    def googleChatWebhook = "https://chat.googleapis.com/v1/spaces/AAAAMyrH_T0/messages?key=AIzaSyDdI0hCZtE6vySjMm-WEfRq3CPzqKqqsHI&token=tM6-wN3x3kHpCFD8cwlZ8fwIh0ll3iMsMSIUbbNjdnA"
+    def payload = """{
+        "text": "${message}"
+    }"""
+    
+    sh """curl -X POST -H 'Content-Type: application/json' -d '${payload}' '${googleChatWebhook}'"""
 
+}
