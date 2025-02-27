@@ -18,12 +18,18 @@ pipeline {
     }
 }    
 // Function to send notifications to Google Chat
-def sendGoogleChatNotification(String message) {
-    def googleChatWebhook = "https://chat.googleapis.com/v1/spaces/AAAAMyrH_T0/messages?key=AIzaSyDdI0hCZtE6vySjMm-WEfRq3CPzqKqqsHI&token=tM6-wN3x3kHpCFD8cwlZ8fwIh0ll3iMsMSIUbbNjdnA"
-    def payload = """{
-        "text": "${message}"
-    }"""
+def sendGoogleChatNotification(String status) {
+    def googleChatWebhook = "https://chat.googleapis.com/v1/spaces/XXX/messages?key=YYY&token=ZZZ"
+    def jobName = env.JOB_NAME
+    def buildNumber = env.BUILD_NUMBER
+    def buildUrl = env.BUILD_URL
     
-    sh """curl -X POST -H 'Content-Type: application/json' -d '${payload}' '${googleChatWebhook}'"""
+    def payload = """{
+        "text": "${status} \nJob: ${jobName} \nBuild: #${buildNumber} \nURL: ${buildUrl}"
+    }"""
 
+    sh """curl -X POST -H 'Content-Type: application/json' -d '${payload}' '${googleChatWebhook}'"""
 }
+
+
+
