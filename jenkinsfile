@@ -1,0 +1,16 @@
+pipeline {
+    agent any  // Correct placement
+    stages {
+        stage('Stage One') {  // Added stage name
+            steps {  // Corrected from "step" to "steps"
+                echo "Hi, this is a demo Jenkinsfile"
+            }  
+        }
+        stage('Stage Two') {  // Added stage name
+            steps {  
+                echo "Stage two"
+            }  
+        }      
+    }     
+}
+
