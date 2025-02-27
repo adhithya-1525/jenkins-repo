@@ -19,7 +19,7 @@ pipeline {
 }    
 // Function to send notifications to Google Chat
 def sendGoogleChatNotification(String status) {
-    def googleChatWebhook = "https://chat.googleapis.com/v1/spaces/XXX/messages?key=YYY&token=ZZZ"
+    def googleChatWebhook = "https://chat.googleapis.com/v1/spaces/AAAAMyrH_T0/messages?key=AIzaSyDdI0hCZtE6vySjMm-WEfRq3CPzqKqqsHI&token=tM6-wN3x3kHpCFD8cwlZ8fwIh0ll3iMsMSIUbbNjdnA"
     def jobName = env.JOB_NAME
     def buildNumber = env.BUILD_NUMBER
     def buildUrl = env.BUILD_URL
