@@ -1,5 +1,6 @@
 pipeline {
     agent any
+
     stages {
         stage('Build') {
             steps {
@@ -8,44 +9,41 @@ pipeline {
             }
         }
     }
+
     post {
-        success {
-            sendGoogleChatNotification(" Build Successful!")
-        }
-        failure {
-            sendGoogleChatNotification(" Build Failed!")
+        always {
+            script {
+                def status = currentBuild.currentResult
+                sendGoogleChatNotification("Build ${status}!")
+            }
+
+            emailext(
+                subject: "Build ${currentBuild.currentResult}: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                body: """
+                    Build Status: ${currentBuild.currentResult}
+                    Job Name: ${env.JOB_NAME}
+                    Build Number: ${env.BUILD_NUMBER}
+                    Console Output: ${env.BUILD_URL}/console
+                """,
+                recipientProviders: [[$class: 'CulpritsRecipientProvider']],
+                to: "your-email@example.com"
+            )
         }
     }
-}    
+}
+
 // Function to send notifications to Google Chat
-def sendGoogleChatNotification(String status) {
-    def googleChatWebhook = "https://chat.googleapis.com/v1/spaces/AAAAMyrH_T0/messages?key=AIzaSyDdI0hCZtE6vySjMm-WEfRq3CPzqKqqsHI&token=tM6-wN3x3kHpCFD8cwlZ8fwIh0ll3iMsMSIUbbNjdnA"
-    def jobName = env.JOB_NAME
-    def buildNumber = env.BUILD_NUMBER
-    def buildUrl = env.BUILD_URL
-    
-    def payload = """{
-        "text": "${status} \nJob: ${jobName} \nBuild: #${buildNumber} \nURL: ${buildUrl}"
-    }"""
+def sendGoogleChatNotification(String message) {
+    withCredentials([string(credentialsId: 'GOOGLE_CHAT_WEBHOOK', variable: 'GOOGLE_CHAT_WEBHOOK')]) {
+        def jobName = env.JOB_NAME
+        def buildNumber = env.BUILD_NUMBER
+        def buildUrl = env.BUILD_URL
 
-    sh """curl -X POST -H 'Content-Type: application/json' -d '${payload}' '${googleChatWebhook}'"""
-}
-post {
-    always {
-        emailext(
-            subject: "Build ${currentBuild.currentResult}: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-            body: """
-                Build Status: ${currentBuild.currentResult}
-                Job Name: ${env.JOB_NAME}
-                Build Number: ${env.BUILD_NUMBER}
-                Console Output: ${env.BUILD_URL}/console
-            """,
-            recipientProviders: [[$class: 'CulpritsRecipientProvider']],
-            to: "your-email@example.com"
-        )
+        def payload = """{
+            "text": "${message} \nJob: ${jobName} \nBuild: #${buildNumber} \nURL: ${buildUrl}"
+        }"""
+
+        sh """curl -X POST -H 'Content-Type: application/json' -d '${payload}' '${GOOGLE_CHAT_WEBHOOK}'"""
     }
 }
-
-
-
 
