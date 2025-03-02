@@ -1,20 +1,20 @@
 pipeline {
-agent any
-stages { 
-stage('one'){
-        steps {
-       
-          echo "hi this is stage one"
-              }
-}
-stage('two'){
-          steps {
-       
-          echo "hi this is stage two"
-              }
-}
-}
-post {
+    agent any
+
+    stages { 
+        stage('one') {
+            steps {
+                echo "hi this is stage one"
+            }
+        }
+        stage('two') {
+            steps {
+                echo "hi this is stage two"
+            }
+        }
+    }
+
+    post {
         success {
             sendGoogleChatNotification("✅ Build Successful! 🎉")
         }
@@ -22,14 +22,10 @@ post {
             sendGoogleChatNotification("❌ Build Failed! 🔴")
         }
     }
-post {
-    failure {
-        emailext subject: "Build Failed: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-                 body: "Check console output at ${env.BUILD_URL}",
-                 to: "your-email@example.com"
-    }
 }
-}
+
+// Secure function for Google Chat notifications
+
 def sendGoogleChatNotification(String status) {
     def googleChatWebhook = "https://chat.googleapis.com/v1/spaces/AAAAMyrH_T0/messages?key=AIzaSyDdI0hCZtE6vySjMm-WEfRq3CPzqKqqsHI&token=tM6-wN3x3kHpCFD8cwlZ8fwIh0ll3iMsMSIUbbNjdnA"
     def jobName = env.JOB_NAME
@@ -42,5 +38,3 @@ def sendGoogleChatNotification(String status) {
 
     sh """curl -X POST -H 'Content-Type: application/json' -d '${payload}' '${googleChatWebhook}'"""
 }
-
-
