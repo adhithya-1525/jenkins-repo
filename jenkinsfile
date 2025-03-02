@@ -2,10 +2,16 @@ pipeline {
 agent any
 stages { 
 stage('one'){
+        steps {
+       
           echo "hi this is stage one"
+              }
 }
 stage('two'){
+          steps {
+       
           echo "hi this is stage two"
+              }
 }
 }
 post {
@@ -36,3 +42,5 @@ def sendGoogleChatNotification(String status) {
 
     sh """curl -X POST -H 'Content-Type: application/json' -d '${payload}' '${googleChatWebhook}'"""
 }
+
+
