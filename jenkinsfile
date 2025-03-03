@@ -1,33 +1,61 @@
 pipeline {
     agent any
 
-    stages {
-        stage('Checkout Code') {
+    stages { 
+        stage('one') {
             steps {
-                echo "Checking out code from branch: ${env.BRANCH_NAME}"
-                git url: 'https://github.com/adhithya-1525/jenkins-repo.git', branch: "${env.BRANCH_NAME}"
+                echo "hi this is stage one"
             }
         }
-
-        stage('Build') {
+        stage('two') {
             steps {
-                echo "Building the application..."
-            }
-        }
-
-        stage('Test') {
-            steps {
-                echo "Running tests..."
-            }
-        }
-
-        stage('Deploy') {
-            // when { branch 'main' }  // Only deploy if it's the 'main' branch
-            steps {
-                echo "Deploying the application..."
-                // Add deployment steps (e.g., copy files, run Docker, deploy to server)
+                echo "hi this is stage two"
             }
         }
     }
+
+    post {
+        success {
+            sendGoogleChatNotification("✅ Build Successful! 🎉")
+            emailext(
+                subject: "✅ Build Successful: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                body: """<h3>🎉 Build Success</h3>
+                         <p><b>Job Name:</b> ${env.JOB_NAME}</p>
+                         <p><b>Build Number:</b> ${env.BUILD_NUMBER}</p>
+                         <p><b>Build URL:</b> <a href="${env.BUILD_URL}">${env.BUILD_URL}</a></p>""",
+                recipientProviders: [[$class: 'CulpritsRecipientProvider']],
+                to: "sakthiadithya.k@vvdntech.in",
+                mimeType: 'text/html'
+            )
+        }
+
+        failure {
+            sendGoogleChatNotification("❌ Build Failed! 🔴")
+            emailext(
+                subject: "❌ Build Failed: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                body: """<h3>🔴 Build Failed</h3>
+                         <p><b>Job Name:</b> ${env.JOB_NAME}</p>
+                         <p><b>Build Number:</b> ${env.BUILD_NUMBER}</p>
+                         <p><b>Console Output:</b> <a href="${env.BUILD_URL}/console">${env.BUILD_URL}/console</a></p>""",
+                recipientProviders: [[$class: 'CulpritsRecipientProvider']],
+                to: "sakthiadithya.k@vvdntech.in",
+                mimeType: 'text/html'
+            )
+        }
+    }
+}
+
+// Function to send notifications to Google Chat
+def sendGoogleChatNotification(String status) {
+    def googleChatWebhook = "https://chat.googleapis.com/v1/spaces/AAAAMyrH_T0/messages?key=AIzaSyDdI0hCZtE6vySjMm-WEfRq3CPzqKqqsHI&token=tM6-wN3x3kHpCFD8cwlZ8fwIh0ll3iMsMSIUbbNjdnA"
+    def jobName = env.JOB_NAME
+    def buildNumber = env.BUILD_NUMBER
+    def buildUrl = env.BUILD_URL
+    
+    def payload = """{
+        "text": "${status} \nJob: ${jobName} \nBuild: #${buildNumber} \nURL: ${buildUrl}"
+    }"""
+
+    sh """curl -X POST -H 'Content-Type: application/json' -d '${payload}' '${googleChatWebhook}'"""
 }
 
