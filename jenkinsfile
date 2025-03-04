@@ -2,7 +2,7 @@ pipeline {
     agent any
     
     parameters {
-    choice(name: 'NODE_LABEL', choices: ['jenkins_node','jenkins_node_2], description: 'Select the node to run the build')
+    choice(name: 'NODE_LABEL', choices: ['default_node','jenkins_node'], description: 'Select the node to run the build')
 }
 
     stages {
