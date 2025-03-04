@@ -31,7 +31,7 @@ pipeline {
     }
     post {
     success {
-        sendGoogleChatNotification("✅ Build Successful! 🎉")
+       // sendGoogleChatNotification("✅ Build Successful! 🎉")
         emailext(
             subject: "✅ Build Successful: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
             body: """<h3>🎉 Build Success</h3>
@@ -45,7 +45,7 @@ pipeline {
     }
 
     failure {
-        sendGoogleChatNotification("❌ Build Failed! 🔴")
+        //sendGoogleChatNotification("❌ Build Failed! 🔴")
         emailext(
             subject: "❌ Build Failed: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
             body: """<h3>🔴 Build Failed</h3>
