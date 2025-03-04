@@ -1,11 +1,22 @@
 pipeline {
     agent any
+    
+    parameters {
+    choice(name: 'NODE_LABEL', choices: ['default_node','jenkins_node'], description: 'Select the node to run the build')
+}
 
     stages {
         stage('Checkout Code') {
             steps {
                 echo "Checking out code from branch: ${env.BRANCH_NAME}"
-                git url: 'https://github.com/adhithya-1525/jenkins-repo.git', branch: "${env.BRANCH_NAME}"
+                // git url: 'https://github.com/adhithya-1525/jenkins-repo.git', branch: "${env.BRANCH_NAME}"
+            }
+        }
+        
+        stage('Build on Selected Node') {
+            agent { label "${params.NODE_LABEL}" }  // Runs on the selected node
+            steps {
+                echo "Running build on node: ${params.NODE_LABEL}"
             }
         }
 
