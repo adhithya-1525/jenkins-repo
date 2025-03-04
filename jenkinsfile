@@ -22,6 +22,35 @@ pipeline {
             sendGoogleChatNotification("❌ Build Failed! 🔴")
         }
     }
+	post {
+    	success {
+       // sendGoogleChatNotification("✅ Build Successful! 🎉")
+        	emailext(
+            	subject: "✅ Build Successful: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+           	 body: """<h3>🎉 Build Success</h3>
+                     <p><b>Job Name:</b> ${env.JOB_NAME}</p>
+                     <p><b>Build Number:</b> ${env.BUILD_NUMBER}</p>
+                     <p><b>Build URL:</b> <a href="${env.BUILD_URL}">${env.BUILD_URL}</a></p>""",
+           	 recipientProviders: [[$class: 'CulpritsRecipientProvider']],
+            	to: "adhiadhithyakutty999@gmail.com",
+            	mimeType: 'text/html'
+        )
+    }
+
+    	failure {
+        //sendGoogleChatNotification("❌ Build Failed! 🔴")
+       	 emailext(
+            subject: "❌ Build Failed: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+            body: """<h3>🔴 Build Failed</h3>
+                     <p><b>Job Name:</b> ${env.JOB_NAME}</p>
+                     <p><b>Build Number:</b> ${env.BUILD_NUMBER}</p>
+                     <p><b>Console Output:</b> <a href="${env.BUILD_URL}/console">${env.BUILD_URL}/console</a></p>""",
+            recipientProviders: [[$class: 'CulpritsRecipientProvider']],
+            to: "adhiadhithyakutty999@gmail.com",
+            mimeType: 'text/html'
+        )
+    }
+}
 }
 
 // Secure function for Google Chat notifications
