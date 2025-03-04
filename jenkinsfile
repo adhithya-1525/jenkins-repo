@@ -39,7 +39,7 @@ pipeline {
                      <p><b>Build Number:</b> ${env.BUILD_NUMBER}</p>
                      <p><b>Build URL:</b> <a href="${env.BUILD_URL}">${env.BUILD_URL}</a></p>""",
             recipientProviders: [[$class: 'CulpritsRecipientProvider']],
-            to: "sakthiadithya.k@vvdntech.in",
+            to: "adhiadhithyakutty999@gmail.com",
             mimeType: 'text/html'
         )
     }
@@ -53,7 +53,7 @@ pipeline {
                      <p><b>Build Number:</b> ${env.BUILD_NUMBER}</p>
                      <p><b>Console Output:</b> <a href="${env.BUILD_URL}/console">${env.BUILD_URL}/console</a></p>""",
             recipientProviders: [[$class: 'CulpritsRecipientProvider']],
-            to: "sakthiadithya.k@vvdntech.in",
+            to: "adhiadhithyakutty999@gmail.com",
             mimeType: 'text/html'
         )
     }
