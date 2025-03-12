@@ -1,0 +1,90 @@
+@Library('shared_ci_library') _ 
+
+pipeline {
+    agent { label 'master'}
+
+    environment {
+        mail_to = "athira.km@vvdntech.in"
+        cc_to = "athira.km@vvdntech.in"
+        JFROG_REPO_NAME = "intu_nvrs"
+        BUILD_USER=getBuildUser()
+        ARTIFACTORY_URL = "https://artifactory-dev.vvdntech.com/ui/admin/repositories/local"
+        ARTIFACTORY_REPO = "Sakthi-demo"
+        ARTIFACTORY_USER = 
+        ARTIFACTORY_PASSWORD = 
+        VERSION = "1.0.${BUILD_NUMBER}"
+    }
+
+	parameters{
+        choice(name: 'BUILD_TYPE', choices: ['dev','qa'], description: 'Select on which environment you want to Implement CI')
+        booleanParam(name: 'DEPLOYMENT', defaultValue: false, description:'Enable it if you want to deploy as well')
+    }
+    stages {
+        stage('Pre-Build'){
+            steps {
+                
+                googlechatlib('STARTED', "${BUILD_USER}","${GOOGLE_CHAT_ROOM_ID}")
+                emailNotification('STARTED',"${mail_to}","${cc_to}","${BUILD_USER}")
+            }
+        }
+        
+       
+        stage('Checkout Code') {
+            steps {
+                git branch: 'main', url: 'https://your-git-repo.git'
+            }
+        }
+
+        stage('Tar file Creation') {
+            steps {
+                sh '''
+                mkdir build
+                javac -d build src/**/*.java
+                tar -cvf build/app-${VERSION}.tar -C build .
+                '''
+            }
+        }
+
+        stage('Upload to JFrog Artifactory') {
+            steps {
+                script {
+                    
+                    def artifact_pattern="${SUB_PROJECT_NAME}-${PROJECT_VERSION}.tar.gz"
+                    def artifact_target="${JFROG_REPO_NAME}/${FOLDER}/${SUB_PROJECT_NAME}/${PROJECT_VERSION}/B${BUILD_NUMBER}/${SUB_PROJECT_NAME}-${PROJECT_VERSION}.tar.gz"
+                    def latest_target="${JFROG_REPO_NAME}/latest/${FOLDER}/${SUB_PROJECT_NAME}/${SUB_PROJECT_NAME}.tar.gz"
+                    artifactory_upload(["${artifact_pattern}","${artifact_target}"],["${artifact_pattern}","${latest_target}"])
+
+
+                }
+            }
+        }
+    }
+
+    post {
+        always{ script{
+            badge("${BUILD_USER}") //Add badge icons to build history
+            emailNotification(currentBuild.result,"${mail_to}","${cc_to}","${BUILD_USER}") 
+            googlechatlib(currentBuild.result,"${BUILD_USER}","${GOOGLE_CHAT_ROOM_ID}")}
+        }
+        success{
+            script{
+                if(params.DEPLOYMENT){
+                    build(job:'INTUNVRS_CLOUD_CD/',
+                          parameters: [string(name:'ENVIRONMENT',value: params.BUILD_TYPE),
+                                       string(name:'BINARY_URL',value: ARTIFACTORY_BINARY)],
+                          propagate:false,
+                          wait:false)
+                }
+                else{
+                    echo "Deploy job not triggered"
+                }
+            }
+            updateGitlabCommitStatus name : 'build', state: 'success'
+        }
+        failure{updateGitlabCommitStatus name: 'build', state: 'failed'}
+        aborted{updateGitlabCommitStatus name: 'build', state: 'canceled'}
+        cleanup{cleanWs notFailBuild: true}
+    }
+}
+
+
