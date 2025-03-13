@@ -1,25 +1,27 @@
 @Library('shared_ci_library') _ 
 
-pipeline {
-    agent { label 'master'}
-
-    environment {
-        mail_to = "athira.km@vvdntech.in"
-        cc_to = "athira.km@vvdntech.in"
-        JFROG_REPO_NAME = "intu_nvrs"
+  pipeline{
+  agent{ label 'master'}
+    environment {        
+        mail_to = "sakthiadithya.k@vvdntech.in"
+        cc_to = "sakthiadithya.k@vvdntech.in"
+        JFROG_REPO_NAME = "Noc_free"
         BUILD_USER=getBuildUser()
-        ARTIFACTORY_URL = "https://artifactory-dev.vvdntech.com/ui/admin/repositories/local"
-        ARTIFACTORY_REPO = "Sakthi-demo"
-        ARTIFACTORY_USER = 
-        ARTIFACTORY_PASSWORD = 
-        VERSION = "1.0.${BUILD_NUMBER}"
+        PROJECT_NAME="Noc_free"
+        SUB_PROJECT_NAME="Noc_free_cloud"
+        PROJECT_VERSION="1.0"
+        FOLDER=rtBuildtype()
+        GIT=gitCommitURL() //gitcommit URL
+        ARTIFACTORY_PATH = "${ARTIFACTORY_URL}/${JFROG_REPO_NAME}/${FOLDER}/${SUB_PROJECT_NAME}/${PROJECT_VERSION}/B${BUILD_NUMBER}/${SUB_PROJECT_NAME}-${PROJECT_VERSION}.tar.gz"
+        ARTIFACTORY_BINARY = "${ARTIFACTORY_URL}/${JFROG_REPO_NAME}/${FOLDER}/${SUB_PROJECT_NAME}/${PROJECT_VERSION}/B${BUILD_NUMBER}/${SUB_PROJECT_NAME}-${PROJECT_VERSION}.tar.gz"
+        GOOGLE_CHAT_ROOM_ID = "Google_Chat_Testing"
+        
     }
-
-	parameters{
+parameters{
         choice(name: 'BUILD_TYPE', choices: ['dev','qa'], description: 'Select on which environment you want to Implement CI')
         booleanParam(name: 'DEPLOYMENT', defaultValue: false, description:'Enable it if you want to deploy as well')
     }
-    stages {
+    stages{
         stage('Pre-Build'){
             steps {
                 
@@ -27,26 +29,25 @@ pipeline {
                 emailNotification('STARTED',"${mail_to}","${cc_to}","${BUILD_USER}")
             }
         }
-        
-       
-        stage('Checkout Code') {
-            steps {
-                git branch: 'main', url: 'https://your-git-repo.git'
+          //Build Stage
+        stage('Build Project'){
+            steps{
+                script{
+                
+                         sh '''
+                           
+                           ls -la
+                           tar -czf $WORKSPACE/${SUB_PROJECT_NAME}-${PROJECT_VERSION}.tar.gz *
+
+                            
+                        ''' 
+                    }
             }
         }
-
-        stage('Tar file Creation') {
+   //Artifactory Push
+        stage('Push to Artifactory'){
             steps {
-                sh '''
-                mkdir build
-                javac -d build src/**/*.java
-                tar -cvf build/app-${VERSION}.tar -C build .
-                '''
-            }
-        }
-
-        stage('Upload to JFrog Artifactory') {
-            steps {
+          
                 script {
                     
                     def artifact_pattern="${SUB_PROJECT_NAME}-${PROJECT_VERSION}.tar.gz"
@@ -56,20 +57,22 @@ pipeline {
 
 
                 }
-            }
-        }
-    }
 
+            }
+        }     
+    }
+    
     post {
         always{ script{
             badge("${BUILD_USER}") //Add badge icons to build history
             emailNotification(currentBuild.result,"${mail_to}","${cc_to}","${BUILD_USER}") 
             googlechatlib(currentBuild.result,"${BUILD_USER}","${GOOGLE_CHAT_ROOM_ID}")}
         }
-        success{
+        
+                success{
             script{
                 if(params.DEPLOYMENT){
-                    build(job:'INTUNVRS_CLOUD_CD/',
+                    build(job:'Noc_free/',
                           parameters: [string(name:'ENVIRONMENT',value: params.BUILD_TYPE),
                                        string(name:'BINARY_URL',value: ARTIFACTORY_BINARY)],
                           propagate:false,
@@ -81,10 +84,10 @@ pipeline {
             }
             updateGitlabCommitStatus name : 'build', state: 'success'
         }
-        failure{updateGitlabCommitStatus name: 'build', state: 'failed'}
-        aborted{updateGitlabCommitStatus name: 'build', state: 'canceled'}
-        cleanup{cleanWs notFailBuild: true}
+               failure{updateGitlabCommitStatus name: 'build', state: 'failed'}
+        	aborted{updateGitlabCommitStatus name: 'build', state: 'canceled'}
+        	cleanup{cleanWs notFailBuild: true}
     }
-}
 
-
+    
+ }
